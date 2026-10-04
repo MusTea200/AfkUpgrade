@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://b8t1v8k5q4g4"]
+
+[ext_resource type="Script" path="res://TaskTree.gd" id="1_4u8j2"]
+
+[node name="TaskTree" type="Node"]
+script = ExtResource("1_4u8j2")
