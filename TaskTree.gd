@@ -59,6 +59,10 @@ func _on_task_cycle_complete():
 
 	task_completed.emit(active_task, 1)
 
+	# Fix: Advance the task_start_time so that leaving the game online
+	# then going offline doesn't re-calculate rewards for the online portion.
+	SaveManager.task_start_time = TimeManager.get_current_time()
+
 	# 2. Check if we have enough inputs for the next cycle
 	if not active_task.can_start():
 		print("Task stopped: Not enough resources for next cycle.")
@@ -86,6 +90,9 @@ func process_offline_progress():
 		return
 
 	var current_time = TimeManager.get_current_time()
+	if current_time == 0:
+		return
+
 	var elapsed_time = current_time - SaveManager.task_start_time
 
 	# Cap the time at max_duration (e.g., 24 hours)
@@ -123,17 +130,33 @@ func process_offline_progress():
 
 		# Resume if we still can
 		if task_to_resume.can_start():
-			# Update start time so we don't double count
-			SaveManager.task_start_time = TimeManager.get_current_time() - (elapsed_time % task_to_resume.cycle_time)
-			start_task(task_to_resume.task_id)
+			# Keep track of fractional time left for the next cycle
+			var leftover_time = elapsed_time % task_to_resume.cycle_time
+
+			# Deduct for the newly started cycle
+			for item in task_to_resume.input_items:
+				InventoryManager.remove_item(item, task_to_resume.input_items[item])
+
+			active_task = task_to_resume
+			SaveManager.current_task_id = active_task.task_id
+			# Set start time considering the leftover fractional progress
+			SaveManager.task_start_time = TimeManager.get_current_time() - leftover_time
+			_task_timer.start(active_task.cycle_time - leftover_time)
+			task_started.emit(active_task)
+			print("Resumed task: ", active_task.task_name)
 		else:
 			SaveManager.current_task_id = ""
 			SaveManager.task_start_time = 0
 	else:
 		# Didn't even finish 1 cycle offline, resume it with elapsed time
-		start_task(task_to_resume.task_id)
-		# Fast forward timer
+		active_task = task_to_resume
+		SaveManager.current_task_id = active_task.task_id
+
+		# We don't deduct inputs here because they were deducted before they went offline
+		# We just fast forward the timer.
 		_task_timer.start(task_to_resume.cycle_time - elapsed_time)
+		task_started.emit(active_task)
+		print("Resumed task: ", active_task.task_name, " (partial cycle)")
 
 func _process(delta):
 	if active_task and not _task_timer.is_stopped():

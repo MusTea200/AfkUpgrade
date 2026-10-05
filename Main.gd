@@ -40,12 +40,22 @@ func _ready():
 
 	_populate_task_list()
 
+	# If time sync fails (e.g., no internet on Android), we still need to load the save.
+	# But we won't process offline progress.
 	TimeManager.time_synced.connect(_on_time_synced)
+	TimeManager.time_sync_failed.connect(_on_time_sync_failed)
 
 func _on_time_synced(time):
 	SaveManager.load_game()
 	if active_tree:
 		active_tree.process_offline_progress()
+
+func _on_time_sync_failed():
+	print("Time sync failed. Loading save without offline progress.")
+	SaveManager.load_game()
+	if active_tree and SaveManager.current_task_id != "":
+		# Just resume the task visually without skipping time
+		active_tree.start_task(SaveManager.current_task_id)
 
 func _populate_task_list():
 	for child in task_panel.get_children():
