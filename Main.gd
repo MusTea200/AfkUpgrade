@@ -78,6 +78,26 @@ func _populate_task_list():
 		if is_instance_valid(task):
 			var btn = Button.new()
 			btn.text = str(task.task_name) + " (" + str(task.cycle_time) + "s)"
+
+			var tooltip = str(task.description) + "\n\nInputs:\n"
+			if task.input_items.size() > 0:
+				for item in task.input_items:
+					tooltip += "- " + str(item).capitalize() + ": " + str(task.input_items[item]) + "\n"
+			else:
+				tooltip += "- None\n"
+
+			tooltip += "\nYields:\n"
+			if task.output_items.size() > 0:
+				for item in task.output_items:
+					tooltip += "- " + str(item).capitalize() + ": " + str(task.output_items[item]) + "\n"
+			else:
+				tooltip += "- None\n"
+
+			btn.tooltip_text = tooltip.strip_edges()
+			btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+			btn.set_meta("task", task)
+			btn.disabled = not task.can_start()
+
 			# Using bind carefully
 			btn.pressed.connect(func(t_id=task.task_id):
 				if is_instance_valid(active_tree):
@@ -101,6 +121,14 @@ func _on_inventory_changed():
 		lbl.text = str(item_id).capitalize() + ": " + str(items[item_id])
 		lbl.add_theme_color_override("font_color", Color(0.2, 0.2, 0.2))
 		inventory_panel.add_child(lbl)
+
+	# Re-evaluate task button affordability
+	if is_instance_valid(task_panel):
+		for child in task_panel.get_children():
+			if child is Button and child.has_meta("task"):
+				var task = child.get_meta("task")
+				if is_instance_valid(task):
+					child.disabled = not task.can_start()
 
 func _on_task_started(task: Task):
 	if is_instance_valid(current_task_label) and is_instance_valid(task):
