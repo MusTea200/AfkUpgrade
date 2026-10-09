@@ -1,0 +1,3 @@
+## 2024-05-18 - Optimize offline progress calculation
+**Learning:** Found a severe performance bottleneck specific to this codebase's architecture where offline AFK progression up to 24h (86400 seconds) uses an O(N) loop simulating every cycle one by one, adding/removing resources. This can freeze the main thread on startup for players with long tasks or massive offline time.
+**Action:** Instead of fragile global state or complex O(1) math that bypasses encapsulation, optimize the loop by passing an optional `silent=true` parameter to batch UI updates, calling `emit_inventory_changed()` once at the end of the calculation.

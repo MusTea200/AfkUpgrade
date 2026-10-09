@@ -103,14 +103,14 @@ func process_offline_progress():
 	if cycles_completed > 0:
 		var actual_cycles = 1
 		for item in task_to_resume.output_items:
-			InventoryManager.add_item(item, task_to_resume.output_items[item])
+			InventoryManager.add_item(item, task_to_resume.output_items[item], true)
 
 		for i in range(1, cycles_completed):
 			if task_to_resume.can_start():
 				for item in task_to_resume.input_items:
-					InventoryManager.remove_item(item, task_to_resume.input_items[item])
+					InventoryManager.remove_item(item, task_to_resume.input_items[item], true)
 				for item in task_to_resume.output_items:
-					InventoryManager.add_item(item, task_to_resume.output_items[item])
+					InventoryManager.add_item(item, task_to_resume.output_items[item], true)
 				actual_cycles += 1
 			else:
 				print("Ran out of inputs during offline calculation after ", actual_cycles, " cycles.")
@@ -121,7 +121,7 @@ func process_offline_progress():
 		if task_to_resume.can_start():
 			var leftover_time = elapsed_time % task_to_resume.cycle_time
 			for item in task_to_resume.input_items:
-				InventoryManager.remove_item(item, task_to_resume.input_items[item])
+				InventoryManager.remove_item(item, task_to_resume.input_items[item], true)
 
 			active_task = task_to_resume
 			SaveManager.current_task_id = active_task.task_id
@@ -144,6 +144,8 @@ func process_offline_progress():
 
 		task_started.emit(active_task)
 		print("Resumed task: ", active_task.task_name, " (partial cycle)")
+
+	InventoryManager.emit_inventory_changed()
 
 func _process(delta):
 	if is_instance_valid(active_task) and is_instance_valid(_task_timer) and not _task_timer.is_stopped():
