@@ -23,7 +23,7 @@ jobs:
 
       - name: Setup Export Presets for Keystore
         run: |
-          sed -i "s|keystore/debug=\"\"|keystore/debug=\"debug.keystore\"|" export_presets.cfg
+          sed -i "s|keystore/debug=\"\"|keystore/debug=\"${GITHUB_WORKSPACE}/debug.keystore\"|" export_presets.cfg
           sed -i "s|keystore/debug_user=\"\"|keystore/debug_user=\"androiddebugkey\"|" export_presets.cfg
           sed -i "s|keystore/debug_password=\"\"|keystore/debug_password=\"android\"|" export_presets.cfg
 
@@ -40,6 +40,9 @@ jobs:
           echo 'export/android/android_sdk_path = "/usr/lib/android-sdk"' >> ~/.config/godot/editor_settings-4.tres
           JAVA_PATH=$(find /usr/lib/jvm -maxdepth 1 -type d -name "java-*-openjdk-amd64" | head -n 1)
           echo "export/android/java_sdk_path = \"$JAVA_PATH\"" >> ~/.config/godot/editor_settings-4.tres
+          echo "export/android/debug_keystore = \"${GITHUB_WORKSPACE}/debug.keystore\"" >> ~/.config/godot/editor_settings-4.tres
+          echo 'export/android/debug_keystore_user = "androiddebugkey"' >> ~/.config/godot/editor_settings-4.tres
+          echo 'export/android/debug_keystore_pass = "android"' >> ~/.config/godot/editor_settings-4.tres
 
       - name: Build Android
         run: |
