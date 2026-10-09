@@ -45,6 +45,8 @@ func _ready():
 
 		_populate_task_list()
 
+	_on_inventory_changed()
+
 	# Connect time signals defensively
 	if not TimeManager.time_synced.is_connected(_on_time_synced):
 		TimeManager.time_synced.connect(_on_time_synced)
@@ -78,6 +80,20 @@ func _populate_task_list():
 		if is_instance_valid(task):
 			var btn = Button.new()
 			btn.text = str(task.task_name) + " (" + str(task.cycle_time) + "s)"
+
+			# Add UX enhancements: Tooltip and hand cursor
+			var tooltip = str(task.description)
+			if not task.input_items.is_empty():
+				tooltip += "\n\nRequires:"
+				for item in task.input_items:
+					tooltip += "\n- " + str(task.input_items[item]) + " " + item.capitalize()
+			if not task.output_items.is_empty():
+				tooltip += "\n\nYields:"
+				for item in task.output_items:
+					tooltip += "\n- " + str(task.output_items[item]) + " " + item.capitalize()
+			btn.tooltip_text = tooltip
+			btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+
 			# Using bind carefully
 			btn.pressed.connect(func(t_id=task.task_id):
 				if is_instance_valid(active_tree):
@@ -95,12 +111,22 @@ func _on_inventory_changed():
 			child.queue_free()
 
 	var items = InventoryManager.get_all_items()
-	for item_id in items:
-		var lbl = Label.new()
-		lbl.name = "Item_" + item_id
-		lbl.text = str(item_id).capitalize() + ": " + str(items[item_id])
-		lbl.add_theme_color_override("font_color", Color(0.2, 0.2, 0.2))
-		inventory_panel.add_child(lbl)
+
+	if items.is_empty():
+		var empty_lbl = Label.new()
+		empty_lbl.name = "EmptyStateLabel"
+		empty_lbl.text = "Inventory is empty.\nStart a task to gather resources."
+		empty_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+		empty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		empty_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		inventory_panel.add_child(empty_lbl)
+	else:
+		for item_id in items:
+			var lbl = Label.new()
+			lbl.name = "Item_" + item_id
+			lbl.text = str(item_id).capitalize() + ": " + str(items[item_id])
+			lbl.add_theme_color_override("font_color", Color(0.2, 0.2, 0.2))
+			inventory_panel.add_child(lbl)
 
 func _on_task_started(task: Task):
 	if is_instance_valid(current_task_label) and is_instance_valid(task):
