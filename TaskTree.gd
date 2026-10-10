@@ -103,21 +103,18 @@ func process_offline_progress():
 	if cycles_completed > 0:
 		var actual_cycles = 1
 		for item in task_to_resume.output_items:
-			InventoryManager.add_item(item, task_to_resume.output_items[item], true)
+			InventoryManager.add_item(item, task_to_resume.output_items[item])
 
 		for i in range(1, cycles_completed):
 			if task_to_resume.can_start():
 				for item in task_to_resume.input_items:
-					InventoryManager.remove_item(item, task_to_resume.input_items[item], true)
+					InventoryManager.remove_item(item, task_to_resume.input_items[item])
 				for item in task_to_resume.output_items:
-					InventoryManager.add_item(item, task_to_resume.output_items[item], true)
+					InventoryManager.add_item(item, task_to_resume.output_items[item])
 				actual_cycles += 1
 			else:
 				print("Ran out of inputs during offline calculation after ", actual_cycles, " cycles.")
 				break
-
-		# Batch UI update after calculating all offline cycles
-		InventoryManager.inventory_changed.emit()
 
 		task_completed.emit(task_to_resume, actual_cycles)
 
