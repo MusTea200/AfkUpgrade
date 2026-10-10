@@ -78,6 +78,19 @@ func _populate_task_list():
 		if is_instance_valid(task):
 			var btn = Button.new()
 			btn.text = str(task.task_name) + " (" + str(task.cycle_time) + "s)"
+
+			# Build tooltip text to show task details
+			var tooltip = str(task.description)
+			if not task.input_items.is_empty():
+				tooltip += "\n\nRequires:"
+				for item in task.input_items:
+					tooltip += "\n- " + str(item).capitalize() + ": " + str(task.input_items[item])
+			if not task.output_items.is_empty():
+				tooltip += "\n\nYields:"
+				for item in task.output_items:
+					tooltip += "\n- " + str(item).capitalize() + ": " + str(task.output_items[item])
+			btn.tooltip_text = tooltip
+
 			# Using bind carefully
 			btn.pressed.connect(func(t_id=task.task_id):
 				if is_instance_valid(active_tree):

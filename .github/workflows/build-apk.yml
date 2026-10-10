@@ -32,6 +32,17 @@ jobs:
           mkdir -p ~/.local/share/godot/export_templates
           ln -s /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
 
+      - name: Setup Editor Settings
+        run: |
+          mkdir -p ~/.config/godot
+          JAVA_PATH=$(dirname $(dirname $(readlink -f $(which java))))
+          cat <<EOF > ~/.config/godot/editor_settings-4.tres
+          [gd_resource type="EditorSettings" format=3]
+          [resource]
+          export/android/android_sdk_path = "/usr/lib/android-sdk"
+          export/android/java_sdk_path = "${JAVA_PATH}"
+          EOF
+
       - name: Build Android
         run: |
           mkdir -p build/android
