@@ -1,0 +1,3 @@
+## 2024-05-24 - Batched Inventory Updates for Offline Progress
+**Learning:** During offline progress calculation, the game iterates through potentially tens of thousands of cycles (up to 24 hours). Updating the inventory item counts individually emitted a signal (`inventory_changed`) each time. This resulted in O(N) signal emissions and downstream UI updates for an invisible process.
+**Action:** When performing large offline recalculations or long-running loops, always decouple the data update from the signal emission. Pass a `silent` flag to update functions to suppress signals during the loop, and then emit a single batch signal update once the loop completes to trigger a single UI refresh.
