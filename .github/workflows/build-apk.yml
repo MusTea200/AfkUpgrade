@@ -35,11 +35,13 @@ jobs:
       - name: Setup Editor Settings
         run: |
           mkdir -p ~/.config/godot
-          echo '[gd_resource type="EditorSettings" format=3]' > ~/.config/godot/editor_settings-4.tres
-          echo '[resource]' >> ~/.config/godot/editor_settings-4.tres
-          echo 'export/android/android_sdk_path = "'$ANDROID_HOME'"' >> ~/.config/godot/editor_settings-4.tres
           JAVA_PATH=$(dirname $(dirname $(readlink -f $(which java))))
-          echo 'export/android/java_sdk_path = "'$JAVA_PATH'"' >> ~/.config/godot/editor_settings-4.tres
+          cat <<EOF > ~/.config/godot/editor_settings-4.tres
+          [gd_resource type="EditorSettings" format=3]
+          [resource]
+          export/android/android_sdk_path = "${ANDROID_HOME}"
+          export/android/java_sdk_path = "${JAVA_PATH}"
+          EOF
 
       - name: Build Android
         run: |
