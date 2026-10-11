@@ -5,24 +5,33 @@ signal inventory_changed
 # Dictionary to store item quantities. Key: String (item_id), Value: int (quantity)
 var items: Dictionary = {}
 
-func add_item(item_id: String, amount: int) -> void:
+func add_item(item_id: String, amount: int, silent: bool = false) -> void:
 	if items.has(item_id):
 		items[item_id] += amount
 	else:
 		items[item_id] = amount
-	inventory_changed.emit()
-	print("Added ", amount, " of ", item_id, ". Total: ", items[item_id])
+	if not silent:
+		inventory_changed.emit()
+		print("Added ", amount, " of ", item_id, ". Total: ", items[item_id])
 
-func remove_item(item_id: String, amount: int) -> bool:
+func remove_item(item_id: String, amount: int, silent: bool = false) -> bool:
 	if items.has(item_id) and items[item_id] >= amount:
 		items[item_id] -= amount
 		if items[item_id] <= 0:
 			items.erase(item_id)
-		inventory_changed.emit()
-		print("Removed ", amount, " of ", item_id, ".")
+		if not silent:
+			inventory_changed.emit()
+			print("Removed ", amount, " of ", item_id, ".")
 		return true
-	print("Not enough ", item_id, " to remove.")
+	if not silent:
+		print("Not enough ", item_id, " to remove.")
 	return false
+
+# ⚡ Bolt Optimization: Batch update method
+# Manually emit the signal after a large batched loop (like AFK calculation)
+# to update the UI once instead of thousands of times.
+func force_update_ui() -> void:
+	inventory_changed.emit()
 
 func has_item(item_id: String, amount: int) -> bool:
 	return items.has(item_id) and items[item_id] >= amount
