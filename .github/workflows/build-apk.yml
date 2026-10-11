@@ -32,6 +32,25 @@ jobs:
           mkdir -p ~/.local/share/godot/export_templates
           ln -s /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
 
+      - name: Setup Godot Editor Settings for Android
+        run: |
+          mkdir -p ~/.config/godot
+          JAVA_BIN=$(which java || echo "")
+          if [ -n "$JAVA_BIN" ]; then
+            JAVA_PATH=$(dirname $(dirname $(readlink -f $JAVA_BIN)))
+          else
+            JAVA_PATH="/usr/lib/jvm/default-java"
+          fi
+          echo "Using JAVA_PATH: $JAVA_PATH"
+          cat <<EOF > ~/.config/godot/editor_settings-4.tres
+          [gd_resource type="EditorSettings" format=3]
+
+          [resource]
+          export/android/android_sdk_path = "$ANDROID_HOME"
+          export/android/java_sdk_path = "$JAVA_PATH"
+          EOF
+          cat ~/.config/godot/editor_settings-4.tres
+
       - name: Build Android
         run: |
           mkdir -p build/android
